@@ -21,7 +21,7 @@ type Lark struct {
 func NewLark() *Lark {
 	return &Lark{
 		Offset: 0,
-		Count:  6,
+		Count:  10,
 		URL:    "https://xndn97f8ch.feishu.cn/space/api/search/refine_search",
 		Client: &http.Client{},
 	}

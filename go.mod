@@ -2,7 +2,17 @@ module github.com/o98k-ok/aggregation
 
 go 1.18
 
-require github.com/zellyn/kooky v0.0.0-20221025221128-3e66d684c4db
+require (
+	github.com/o98k-ok/lazy v0.2.17
+	github.com/zellyn/kooky v0.0.0-20221025221128-3e66d684c4db
+)
+
+require (
+	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/urfave/cli/v2 v2.4.0 // indirect
+	howett.net/plist v1.0.0 // indirect
+)
 
 require (
 	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a // indirect
@@ -17,9 +27,9 @@ require (
 	github.com/keybase/go-keychain v0.0.0-20220408132150-ad3b4a8fd4a7 // indirect
 	github.com/o98k-ok/pcurl v0.0.0-20220411095241-e8aed39adb6d
 	github.com/zalando/go-keyring v0.2.1 // indirect
-	golang.org/x/crypto v0.0.0-20220408190544-5352b0902921 // indirect
+	golang.org/x/crypto v0.0.0-20220507011949-2cf3adece122 // indirect
 	golang.org/x/net v0.0.0-20220407224826-aac1ed45d8e3 // indirect
-	golang.org/x/sys v0.0.0-20220408201424-a24fb2fb8a0f // indirect
+	golang.org/x/sys v0.0.0-20220503163025-988cb79eb6c6 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	www.velocidex.com/golang/go-ese v0.1.0 // indirect
 )
