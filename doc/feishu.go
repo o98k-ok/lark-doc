@@ -12,10 +12,11 @@ import (
 )
 
 type Lark struct {
-	Offset int
-	Count  int
-	URL    string
-	Client *http.Client
+	Offset  int
+	Count   int
+	URL     string
+	Client  *http.Client
+	Session *string
 }
 
 func NewLark() *Lark {
@@ -30,6 +31,11 @@ func NewLark() *Lark {
 func (l *Lark) WithPage(offset, count int) *Lark {
 	l.Offset = offset
 	l.Count = count
+	return l
+}
+
+func (l *Lark) CustomSession(session string) *Lark {
+	l.Session = &session
 	return l
 }
 
@@ -59,12 +65,18 @@ type ArtitleResp struct {
 
 func (l Lark) Query(query string) ([]Entity, error) {
 	offset, count := strconv.FormatInt(int64(l.Offset), 10), strconv.FormatInt(int64(l.Count), 10)
-	sessions := cookie.NewKooky("feishu.cn", "session").Filter()
-	if len(sessions) == 0 {
-		return nil, errors.New("no fuch session")
+	var session cookie.CookieItem
+	if l.Session == nil || len(*l.Session) == 0 {
+		sessions := cookie.NewKooky("feishu.cn", "session").Filter()
+		if len(sessions) == 0 {
+			return nil, errors.New("no fuch session")
+		}
+		session = sessions[0]
+	} else {
+		session.Name = "session"
+		session.Value = *l.Session
 	}
 
-	session := sessions[0]
 	resp, err := np.NewRequest(l.Client, l.URL).
 		AddParam("query", query).AddParam("offset", offset).AddParam("count", count).
 		AddHeader("cookie", fmt.Sprintf("%s=%s;", session.Name, session.Value)).Do()

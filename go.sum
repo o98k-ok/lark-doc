@@ -34,8 +34,8 @@ github.com/keybase/go-keychain v0.0.0-20220408132150-ad3b4a8fd4a7 h1:ttxQhWhqiYE
 github.com/keybase/go-keychain v0.0.0-20220408132150-ad3b4a8fd4a7/go.mod h1:enrU/ug069Om7vWxuFE6nikLI2BZNwevMiGSo43Kt5w=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e h1:fD57ERR4JtEqsWbfPhv4DMiApHyliiK5xCTNVSPiaAs=
-github.com/o98k-ok/lazy v0.2.17 h1:U4+KVuY1Wk0jWT23dRIWMENq3+ZXTx537/S5MMBSX34=
-github.com/o98k-ok/lazy v0.2.17/go.mod h1:bFqS0Mpk2K3JZvBkb3O8QSHXJ/U65nNmXrn1EJlVCtA=
+github.com/o98k-ok/lazy v0.2.18 h1:G7FhhupyD21rsCf9rHUT94yKQrmPWI2umN6ZI9EWzBc=
+github.com/o98k-ok/lazy v0.2.18/go.mod h1:bFqS0Mpk2K3JZvBkb3O8QSHXJ/U65nNmXrn1EJlVCtA=
 github.com/o98k-ok/pcurl v0.0.0-20220411095241-e8aed39adb6d h1:kGyMItE5ShkTYvmgq1VaEIwckR+C3t7N6NGvqhqnNCk=
 github.com/o98k-ok/pcurl v0.0.0-20220411095241-e8aed39adb6d/go.mod h1:/jSLI/84xMBQHFJZ4CKmEIfRaf3YXVdEH2ZXQ51yzq4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

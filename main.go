@@ -37,9 +37,15 @@ func intro(entity doc.Entity) string {
 func entry() {
 	cli := alfred.NewApp("lark doc search plugin")
 	cli.Bind("query", func(s []string) {
-		params := strings.Join(s, " ")
+		env, err := alfred.GetFlowEnv()
+		if err != nil {
+			alfred.ErrItems("alfred get envs failed", err).Show()
+			return
+		}
 
-		entities, err := doc.NewLark().Query(params)
+		cli := doc.NewLark().CustomSession(env.GetAsString("session", "")).WithPage(0, env.GetAsInt("count", 9))
+		params := strings.Join(s, " ")
+		entities, err := cli.Query(params)
 		if err != nil {
 			alfred.ErrItems("query lark failed", err)
 			return
@@ -47,8 +53,14 @@ func entry() {
 
 		msg := alfred.NewItems()
 		for _, entity := range entities {
-			msg.Append(alfred.NewItem(title(entity), intro(entity), entity.Url))
+			item := alfred.NewItem(title(entity), intro(entity), entity.Url)
+			item.Extra = entity.ViewTS
+			msg.Append(item)
 		}
+
+		msg.Order(func(l, r *alfred.Item) bool {
+			return l.Extra.(uint32) > r.Extra.(uint32)
+		})
 		msg.Show()
 	})
 
