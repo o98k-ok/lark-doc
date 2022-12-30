@@ -3,7 +3,7 @@ module github.com/o98k-ok/aggregation
 go 1.18
 
 require (
-	github.com/o98k-ok/lazy v0.2.17
+	github.com/o98k-ok/lazy v0.2.18
 	github.com/zellyn/kooky v0.0.0-20221025221128-3e66d684c4db
 )
 
