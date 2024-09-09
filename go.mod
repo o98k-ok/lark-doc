@@ -20,6 +20,7 @@ require (
 	github.com/Velocidex/yaml/v2 v2.2.8 // indirect
 	github.com/bobesa/go-domain-util v0.0.0-20190911083921-4033b5f7dd89 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/duke-git/lancet/v2 v2.3.2
 	github.com/go-ini/ini v1.66.4 // indirect
 	github.com/go-sqlite/sqlite3 v0.0.0-20180313105335-53dd8e640ee7 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
@@ -29,7 +30,7 @@ require (
 	github.com/zalando/go-keyring v0.2.1 // indirect
 	golang.org/x/crypto v0.0.0-20220507011949-2cf3adece122 // indirect
 	golang.org/x/net v0.0.0-20220407224826-aac1ed45d8e3 // indirect
-	golang.org/x/sys v0.0.0-20220503163025-988cb79eb6c6 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	www.velocidex.com/golang/go-ese v0.1.0 // indirect
 )

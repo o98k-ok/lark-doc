@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/duke-git/lancet/v2/convertor"
 	"github.com/o98k-ok/aggregation/doc"
 	"github.com/o98k-ok/lazy/v2/alfred"
 )
@@ -36,19 +38,43 @@ func intro(entity doc.Entity) string {
 
 func entry() {
 	cli := alfred.NewApp("lark doc search plugin")
-	cli.Bind("query", func(s []string) {
-		env, err := alfred.GetFlowEnv()
+
+	session := os.Getenv("session")
+	count, _ := convertor.ToInt(os.Getenv("count"))
+	cacheFile := os.Getenv("cache_path")
+	if cacheFile == "" {
+		cacheFile = "lark.json"
+	}
+
+	cli.Bind("trigger", func(s []string) {
+		cli := doc.NewLark().CustomSession(session).WithPage(0, 40)
+		entities, err := cli.Query("")
 		if err != nil {
-			alfred.ErrItems("alfred get envs failed", err).Show()
 			return
 		}
 
-		cli := doc.NewLark().CustomSession(env.GetAsString("session", "")).WithPage(0, env.GetAsInt("count", 9))
-		params := strings.Join(s, " ")
-		entities, err := cli.Query(params)
+		encoder, err := os.OpenFile(cacheFile, os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
-			alfred.ErrItems("query lark failed", err)
 			return
+		}
+		defer encoder.Close()
+		json.NewEncoder(encoder).Encode(entities)
+	})
+
+	cli.Bind("query", func(s []string) {
+		var entities []doc.Entity
+		params := strings.TrimSpace(strings.Join(s, " "))
+		if fileContent, err := os.ReadFile(cacheFile); err == nil && len(params) == 0 {
+			if err := json.Unmarshal(fileContent, &entities); err != nil {
+				return
+			}
+		} else {
+			cli := doc.NewLark().CustomSession(session).WithPage(0, int(count))
+			entities, err = cli.Query(params)
+			if err != nil {
+				alfred.ErrItems("query lark failed", err)
+				return
+			}
 		}
 
 		msg := alfred.NewItems()
@@ -61,6 +87,10 @@ func entry() {
 		msg.Order(func(l, r *alfred.Item) bool {
 			return l.Extra.(uint32) > r.Extra.(uint32)
 		})
+
+		if len(msg.Items) > int(count) {
+			msg.Items = msg.Items[:count]
+		}
 		msg.Show()
 	})
 

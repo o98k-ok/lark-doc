@@ -94,7 +94,7 @@ func (l Lark) Query(query string) ([]Entity, error) {
 	}
 
 	if artitle.Code != 0 {
-		return nil, fmt.Errorf("feishu resp code is %v", artitle.Code)
+		return nil, fmt.Errorf("feishu resp code is %v, msg is %v", artitle.Code, artitle.Msg)
 	}
 
 	var res []Entity
