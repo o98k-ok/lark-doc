@@ -53,12 +53,14 @@ func entry() {
 			return
 		}
 
-		encoder, err := os.OpenFile(cacheFile, os.O_CREATE|os.O_WRONLY, 0644)
+		encoder, err := os.OpenFile(cacheFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 		if err != nil {
+			alfred.Log(err.Error())
 			return
 		}
 		defer encoder.Close()
 		json.NewEncoder(encoder).Encode(entities)
+		alfred.Log("trigger over")
 	})
 
 	cli.Bind("query", func(s []string) {
