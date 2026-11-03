@@ -1,15 +1,20 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
+	"os/signal"
 	"strings"
 	"time"
 
 	"github.com/duke-git/lancet/v2/convertor"
+	"github.com/o98k-ok/aggregation/auth"
 	"github.com/o98k-ok/aggregation/doc"
 	"github.com/o98k-ok/lazy/v2/alfred"
+	qrcode "github.com/skip2/go-qrcode"
 )
 
 func format(s string) string {
@@ -41,29 +46,42 @@ func entry() {
 
 	session := os.Getenv("session")
 	count, _ := convertor.ToInt(os.Getenv("count"))
-	cacheFile := os.Getenv("cache_path")
-	if cacheFile == "" {
-		cacheFile = "lark.json"
+	if count <= 0 {
+		count = 9
+	}
+	cacheFile, err := cachePath()
+	if err != nil {
+		alfred.ErrItems("cache unavailable", err).Show()
+		return
 	}
 
 	cli.Bind("trigger", func(s []string) {
 		cli := doc.NewLark().CustomSession(session).WithPage(0, 40)
 		entities, err := cli.Query("")
 		if err != nil {
+			alfred.ErrItems("update cache failed", err).Show()
 			return
 		}
 
-		encoder, err := os.OpenFile(cacheFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-		if err != nil {
+		if err := saveCache(cacheFile, entities); err != nil {
 			alfred.Log(err.Error())
 			return
 		}
-		defer encoder.Close()
-		json.NewEncoder(encoder).Encode(entities)
 		alfred.Log("trigger over")
 	})
 
 	cli.Bind("query", func(s []string) {
+		if session == "" {
+			path, err := auth.SessionPath()
+			if err != nil {
+				loginItem()
+				return
+			}
+			if _, err := auth.LoadSession(path); err != nil {
+				loginItem()
+				return
+			}
+		}
 		var entities []doc.Entity
 		params := strings.TrimSpace(strings.Join(s, " "))
 		if fileContent, err := os.ReadFile(cacheFile); err == nil && len(params) == 0 {
@@ -74,7 +92,11 @@ func entry() {
 			cli := doc.NewLark().CustomSession(session).WithPage(0, int(count))
 			entities, err = cli.Query(params)
 			if err != nil {
-				alfred.ErrItems("query lark failed", err)
+				if strings.Contains(err.Error(), "run lark-doc login") {
+					loginItem()
+					return
+				}
+				alfred.ErrItems("query lark failed", err).Show()
 				return
 			}
 		}
@@ -103,5 +125,59 @@ func entry() {
 }
 
 func main() {
+	if len(os.Args) == 2 && os.Args[1] == "logout" {
+		if err := logout(); err != nil {
+			fmt.Fprintln(os.Stderr, "Logout failed:", err)
+			os.Exit(1)
+		}
+		fmt.Println("Local session and cache removed. This does not revoke the Feishu web session.")
+		return
+	}
+	if len(os.Args) == 2 && os.Args[1] == "login" {
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+		defer stop()
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+		defer cancel()
+		err := login(ctx)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Login failed:", err)
+			os.Exit(1)
+		}
+		return
+	}
 	entry()
+}
+
+func login(ctx context.Context) error {
+	path, err := auth.SessionPath()
+	if err != nil {
+		return err
+	}
+	client := &http.Client{Timeout: 20 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
+	}}
+	session, err := auth.Login(ctx, client, func(payload string) error {
+		code, err := qrcode.New(payload, qrcode.Medium)
+		if err != nil {
+			return err
+		}
+		fmt.Print(code.ToSmallString(false))
+		fmt.Println("Scan with Feishu and confirm on your phone. Ctrl+C to cancel.")
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	cache, err := cachePath()
+	if err != nil {
+		return err
+	}
+	if err := os.Remove(cache); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("cannot clear previous account cache: %w", err)
+	}
+	if err := auth.SaveSession(path, session); err != nil {
+		return err
+	}
+	fmt.Println("Logged in. Credentials saved in the local credential store.")
+	return nil
 }

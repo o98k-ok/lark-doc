@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/o98k-ok/aggregation/cookie"
+	"github.com/o98k-ok/aggregation/auth"
 	np "github.com/o98k-ok/pcurl/http"
 )
 
@@ -23,7 +23,7 @@ func NewLark() *Lark {
 	return &Lark{
 		Offset: 0,
 		Count:  10,
-		URL:    "https://xndn97f8ch.feishu.cn/space/api/search/refine_search",
+		URL:    "https://www.feishu.cn/space/api/search/refine_search",
 		Client: &http.Client{},
 	}
 }
@@ -65,34 +65,42 @@ type ArtitleResp struct {
 
 func (l Lark) Query(query string) ([]Entity, error) {
 	offset, count := strconv.FormatInt(int64(l.Offset), 10), strconv.FormatInt(int64(l.Count), 10)
-	var session cookie.CookieItem
+	var session string
 	if l.Session == nil || len(*l.Session) == 0 {
-		sessions := cookie.NewKooky("feishu.cn", "session").Filter()
-		if len(sessions) == 0 {
-			return nil, errors.New("no fuch session")
+		path, err := auth.SessionPath()
+		if err != nil {
+			return nil, err
 		}
-		session = sessions[0]
+		session, err = auth.LoadSession(path)
+		if err != nil {
+			return nil, err
+		}
 	} else {
-		session.Name = "session"
-		session.Value = *l.Session
+		session = *l.Session
 	}
 
 	resp, err := np.NewRequest(l.Client, l.URL).
 		AddParam("query", query).AddParam("offset", offset).AddParam("count", count).
-		AddHeader("cookie", fmt.Sprintf("%s=%s;", session.Name, session.Value)).Do()
+		AddHeader("cookie", (&http.Cookie{Name: "session", Value: session}).String()).Do()
 	if err != nil {
 		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.Code == http.StatusUnauthorized || resp.Code == http.StatusForbidden {
+		return nil, errors.New("session expired or access denied; run lark-doc login")
 	}
 	if resp.Code != http.StatusOK {
 		return nil, fmt.Errorf("statu code %v", resp.Code)
 	}
 
-	defer resp.Body.Close()
 	var artitle ArtitleResp
 	if err = json.NewDecoder(resp.Body).Decode(&artitle); err != nil {
 		return nil, err
 	}
 
+	if artitle.Code == 5 {
+		return nil, errors.New("session expired; run lark-doc login")
+	}
 	if artitle.Code != 0 {
 		return nil, fmt.Errorf("feishu resp code is %v, msg is %v", artitle.Code, artitle.Msg)
 	}

@@ -1,0 +1,5 @@
+.amp/
+/lark-doc
+*.alfredworkflow
+session.json
+lark.json
